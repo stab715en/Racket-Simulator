@@ -34,7 +34,6 @@
             border-radius: 4px;
             overflow: hidden;
             position: relative;
-            border: 1px solid rgba(255,255,255,0.05);
         }
         .stat-bar-fill {
             height: 100%;
@@ -42,14 +41,14 @@
             transition: width 0.3s ease-out;
         }
         
-        /* Stat Threshold Colors */
+        /* Threshold Colors */
         .stat-low { background-color: #ffffff; }
-        .stat-medium { background-color: #facc15 !important; } 
-        .stat-high { background-color: #ef4444 !important; }   
+        .stat-medium { background-color: #facc15 !important; } /* Yellow 70+ */
+        .stat-high { background-color: #ef4444 !important; }   /* Red 80+ */
         .stat-extreme { 
             background-color: #d946ef !important; 
             box-shadow: 0 0 10px #d946ef;
-        } 
+        } /* Pink 90+ */
 
         .btn-upgrade {
             background: white;
@@ -68,15 +67,11 @@
             overflow-y: auto;
             scrollbar-width: thin;
         }
-        .history-item {
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding: 4px 0;
-            font-size: 11px;
-        }
         .identity-glow {
             text-shadow: 0 0 8px rgba(96, 165, 250, 0.8);
         }
-
+        
+        /* Vertical Slider Popup */
         .slider-popup {
             display: none;
             position: absolute;
@@ -110,35 +105,7 @@
             backdrop-filter: blur(8px);
         }
 
-        .grade-badge {
-            width: 42px;
-            height: 42px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            font-size: 1.4rem;
-            font-weight: 900;
-            box-shadow: 0 0 15px rgba(0,0,0,0.4);
-            border: 2px solid rgba(255,255,255,0.1);
-            transition: all 0.3s ease;
-        }
-        .grade-badge-lg { width: 80px; height: 80px; font-size: 2.5rem; border-radius: 16px; }
-        .grade-badge-sm { width: 32px; height: 32px; font-size: 1rem; border-radius: 6px; }
-        
-        .grade-s { background: linear-gradient(135deg, #d946ef, #a21caf); color: white; text-shadow: 0 0 10px white; border-color: #f5d0fe; box-shadow: 0 0 20px rgba(217, 70, 239, 0.4); }
-        .grade-a { background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; border-color: #fecaca; }
-        .grade-b { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
-        .grade-c { background: linear-gradient(135deg, #facc15, #ca8a04); color: black; }
-        .grade-d { background: linear-gradient(135deg, #475569, #1e293b); color: white; }
-        .grade-u { background: linear-gradient(135deg, #475569, #1e293b); color: #94a3b8; }
-        
-        .outcomes-list {
-            scrollbar-width: thin;
-            scrollbar-color: #3b82f6 #0f172a;
-        }
-
-        /* Custom Floating Tooltip */
+        /* Outcome Distribution Tooltip Styles */
         #chart-dna-tooltip {
             opacity: 0;
             position: fixed;
@@ -154,44 +121,35 @@
         }
     </style>
 </head>
-<body class="p-4 md:p-8 flex flex-col items-center gap-8 min-h-screen text-white text-sm">
+<body class="p-4 md:p-8 flex flex-col items-center gap-8 min-h-screen text-white">
 
-    <!-- MAIN RACKET UI -->
-    <div class="w-full max-w-md racket-card p-6 relative overflow-hidden shrink-0 shadow-2xl text-white">
-        <div class="absolute top-4 right-4 flex gap-2 text-white">
-            <div class="flex flex-col items-center">
-                <div id="potential-grade" class="grade-badge grade-u text-white">U</div>
-                <span class="text-[7px] font-black uppercase text-white/40 mt-1 tracking-tighter">Potential</span>
-            </div>
-            <div class="flex flex-col items-center">
-                <div id="realtime-grade" class="grade-badge grade-u text-white">U</div>
-                <span class="text-[7px] font-black uppercase text-white/40 mt-1 tracking-tighter">Grade</span>
-            </div>
+    <!-- MAIN RACKET PREVIEW -->
+    <div class="w-full max-w-md racket-card p-6 relative overflow-hidden shrink-0 shadow-2xl">
+        <div class="mb-4 text-left">
+            <h1 id="disp-name" class="text-4xl title-font font-bold uppercase tracking-tight">Neon Chaos</h1>
+            <p id="disp-rarity" class="font-bold uppercase tracking-wider">Divine</p>
+            <div class="w-full h-px bg-gray-500 my-2 opacity-30"></div>
         </div>
 
-        <div class="mb-4 text-left pr-24 text-white">
-            <h1 id="disp-name" class="text-4xl title-font font-bold uppercase tracking-tight text-white truncate">Neon Chaos</h1>
-            <p id="disp-rarity" class="font-bold uppercase tracking-wider text-sm">Divine</p>
-            <div class="w-full h-px bg-gray-500 my-2 opacity-30 text-white"></div>
-        </div>
-
-        <div class="flex justify-between items-start mb-2 text-white">
+        <div class="flex justify-between items-start mb-2">
             <div>
-                <div class="text-3xl title-font font-bold text-white">
-                    Level <span id="currentLevel">1</span> <span class="text-gray-400">/ 15</span>
+                <div class="text-3xl title-font">
+                    Level <span id="currentLevel">1</span> <span class="text-gray-400">/ <span id="maxLevelText">15</span></span>
                 </div>
-                <div id="shard-info" class="text-[10px] text-orange-400 font-bold uppercase mt-1 bg-black/20 px-2 py-0.5 rounded-sm inline-block">
+                <div id="shard-info" class="text-[10px] text-orange-400 font-bold uppercase tracking-tighter mt-1 bg-black/20 px-2 py-0.5 rounded-sm inline-block">
                     Remaining Shards: <span id="remainingShards">0</span>
                 </div>
             </div>
         </div>
-        <p class="text-gray-300 text-xs mb-6 italic text-white/70 font-medium">Each upgrade boosts a random stat</p>
+        <p class="text-gray-300 text-xs mb-6 italic">Each upgrade boosts a random stat</p>
 
-        <div id="stats-container" class="space-y-4 mb-8 text-white text-white"></div>
+        <!-- Dynamic Stats Container -->
+        <div id="stats-container" class="space-y-4 mb-8"></div>
 
-        <div class="mb-6 text-white text-white">
+        <!-- Exp Progress Bar -->
+        <div class="mb-6">
             <div class="w-full bg-black h-4 rounded-full border-2 border-orange-600 relative overflow-hidden">
-                <div id="exp-bar" class="h-full bg-blue-500 transition-all duration-300" style="width: 0%"></div>
+                <div id="exp-bar" class="h-full bg-orange-500 transition-all duration-300" style="width: 0%"></div>
             </div>
         </div>
 
@@ -199,55 +157,56 @@
             <button id="btn-upgrade" onclick="upgradeLevel()" class="w-full py-4 text-2xl btn-upgrade hover:bg-gray-200 transition-colors text-black font-black uppercase tracking-widest">
                 Upgrade
             </button>
-            <div class="flex gap-2 text-white">
-                <button onclick="resetSim()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold uppercase text-sm text-white">Reset</button>
-                <button onclick="autoUpgrade()" class="flex-1 py-3 btn-equip rounded-lg font-bold hover:opacity-90 uppercase text-sm text-black">Auto Max</button>
-                <button id="btn-analysis" onclick="triggerAnalysis()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold uppercase text-[10px] leading-tight tracking-widest text-white text-[10px]">Analyze</button>
+            <div class="flex gap-2">
+                <button onclick="resetSim()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold uppercase text-sm">Reset</button>
+                <button id="btn-auto" onclick="autoUpgrade()" class="flex-1 py-3 btn-equip rounded-lg font-bold hover:opacity-90 uppercase text-sm">Auto Max</button>
+                <button id="btn-analysis" onclick="triggerAnalysis()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold uppercase text-[10px] leading-tight text-white tracking-widest">Analyze</button>
             </div>
         </div>
 
-        <div class="mt-6 text-white">
-            <h3 class="text-[10px] uppercase text-gray-400 font-bold mb-2 tracking-widest text-white text-white">Upgrade History</h3>
-            <div id="history" class="history-log text-[11px] font-mono bg-black/30 p-2 rounded border border-white/10 text-gray-400 italic">
-                Waiting for first upgrade...
+        <div class="mt-6">
+            <h3 class="text-[10px] uppercase text-gray-400 font-bold mb-2 tracking-widest">Upgrade History</h3>
+            <div id="history" class="history-log text-[11px] font-mono bg-black/30 p-2 rounded border border-white/10">
+                <div class="text-gray-500 italic text-xs">No activity yet...</div>
             </div>
         </div>
 
-        <div class="mt-4 flex items-center justify-end opacity-25 hover:opacity-100 transition-opacity cursor-default text-white">
-            <span class="text-[10px] font-medium tracking-widest uppercase text-white">made by stab</span>
+        <!-- Watermark -->
+        <div class="mt-4 flex items-center justify-end opacity-25 hover:opacity-100 transition-opacity cursor-default">
+            <span class="text-[10px] font-medium tracking-widest">made by stab</span>
         </div>
     </div>
 
-    <!-- ANALYSIS MODAL -->
-    <div id="analysis-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 analysis-modal text-white">
-        <div class="w-full max-w-[95vw] bg-slate-900 border border-blue-500/50 rounded-2xl p-6 lg:p-8 shadow-2xl max-h-[95vh] flex flex-col text-white">
-            <div class="flex justify-between items-center mb-6 shrink-0 text-white">
+    <!-- ANALYSIS REPORT MODAL -->
+    <div id="analysis-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 analysis-modal">
+        <div class="w-full max-w-xl bg-slate-800 border border-blue-500/50 rounded-2xl p-6 shadow-2xl max-h-[95vh] overflow-y-auto text-white">
+            <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h2 id="analysis-title" class="text-2xl font-black uppercase tracking-tight text-blue-400 font-bold">Analysis Report</h2>
-                    <p class="text-[10px] text-gray-400 uppercase tracking-widest">Statistical outcomes and potential distributions</p>
+                    <h2 id="analysis-title" class="text-xl font-black uppercase tracking-tight text-blue-400">Analysis Report</h2>
+                    <p class="text-[10px] text-gray-400 uppercase tracking-widest">Probability Results from Custom Run</p>
                 </div>
-                <button onclick="closeAnalysis()" class="text-gray-400 hover:text-white text-3xl font-bold">&times;</button>
+                <button onclick="closeAnalysis()" class="text-gray-400 hover:text-white text-3xl">&times;</button>
             </div>
 
-            <div id="analysis-content" class="space-y-12 overflow-y-auto outcomes-list pr-2 flex-grow text-white">
-                <!-- Dashboard content via JS -->
+            <div id="analysis-content" class="space-y-8">
+                <!-- Analysis content injected via JS -->
             </div>
 
-            <button onclick="closeAnalysis()" class="mt-8 w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold uppercase tracking-widest text-white shadow-lg transition-colors shrink-0">Close Report</button>
+            <button onclick="closeAnalysis()" class="mt-8 w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold uppercase tracking-widest shadow-lg shadow-blue-900/20 text-white">Close Report</button>
         </div>
     </div>
 
-    <!-- CONFIG PANEL -->
-    <div class="w-full max-w-2xl config-panel p-6 shadow-2xl mb-12 text-white">
+    <!-- CONFIGURATION PANEL -->
+    <div class="w-full max-w-2xl config-panel p-6 shadow-2xl mb-12">
         <div class="flex items-center gap-2 mb-6">
             <div class="w-2 h-6 bg-blue-500 rounded-full"></div>
-            <h2 class="text-xl font-black uppercase tracking-tight text-white font-bold">Racket Settings</h2>
+            <h2 class="text-xl font-black uppercase tracking-tight">Racket Settings</h2>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 text-white text-sm">
-            <div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div class="lg:col-span-1">
                 <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Rarity / Type</label>
-                <select id="cfg-rarity" onchange="handleRarityChange()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-blue-500 text-sm">
+                <select id="cfg-rarity" onchange="handleRarityChange()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-blue-500">
                     <option value="Divine">Divine</option>
                     <option value="Mythic">Mythic</option>
                     <option value="Legendary">Legendary</option>
@@ -257,103 +216,128 @@
             </div>
             <div class="lg:col-span-2">
                 <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Racket Name</label>
-                <select id="cfg-name" onchange="handleRacketNameChange()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-blue-500 text-sm">
+                <select id="cfg-name" onchange="handleRacketNameChange()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-blue-500">
                 </select>
-                <input type="text" id="cfg-custom-name" placeholder="Enter name..." class="hidden mt-2 w-full bg-slate-800 border border-blue-500 rounded p-2 text-white text-xs focus:outline-none">
+                <input type="text" id="cfg-custom-name" placeholder="Enter Racket Name..." class="hidden mt-2 w-full bg-slate-800 border border-blue-500 rounded p-2 text-white text-xs focus:outline-none">
             </div>
             <div>
                 <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Start Level</label>
-                <input type="number" id="cfg-start-level" value="1" min="1" max="15" onchange="updateAllStatBounds()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-blue-500 text-sm">
+                <input type="number" id="cfg-start-level" value="1" min="1" max="15" onchange="updateAllStatBounds()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-blue-500">
             </div>
             <div>
                 <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Roll Mode</label>
-                <select id="cfg-roll-mode" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-blue-500 text-sm">
+                <select id="cfg-roll-mode" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-blue-500">
                 </select>
             </div>
             <div>
                 <label class="block text-xs font-bold text-blue-400 uppercase mb-1">Analysis Iterations</label>
-                <select id="cfg-analysis-runs" class="w-full bg-slate-900 border border-blue-900/50 rounded p-2 text-white font-bold focus:outline-none focus:border-blue-500 text-sm">
+                <select id="cfg-analysis-runs" class="w-full bg-slate-900 border border-blue-900/50 rounded p-2 text-white focus:outline-none focus:border-blue-500 font-bold">
                     <option value="50">50 Runs</option>
                     <option value="100" selected>100 Runs</option>
+                    <option value="200">200 Runs</option>
                     <option value="500">500 Runs</option>
                     <option value="1000">1000 Runs</option>
                     <option value="5000">5000 Runs</option>
                     <option value="10000">10000 Runs</option>
-                    <option value="50000">50000 Runs</option>
-                    <option value="100000">100000 Runs</option>
                 </select>
             </div>
         </div>
 
-        <div class="mb-2 flex justify-between items-end border-b border-slate-700 pb-2 text-white">
-            <h3 class="text-sm font-bold text-blue-400 uppercase tracking-widest">Stat Inputs</h3>
-            <div class="flex gap-4 text-[9px] font-black uppercase text-gray-500 pr-12 text-white">
-                <span class="w-12 text-center text-white">Initial</span>
-            </div>
+        <div class="mb-2 flex justify-between items-end border-b border-slate-700 pb-2">
+            <h3 class="text-sm font-bold text-blue-400 uppercase tracking-widest">Stat List</h3>
+            <button onclick="addNewStatRow()" class="bg-blue-600 hover:bg-blue-500 text-white text-[10px] px-3 py-1 rounded font-bold uppercase">+ Add Stat</button>
         </div>
+        <p class="text-[10px] text-gray-400 mb-4 italic text-white/60">Choose which stats are Identity Stats. "ID" means Identity Stat.</p>
 
-        <div id="stat-editor-list" class="grid grid-cols-1 gap-2 mb-6 text-white text-white"></div>
+        <div id="stat-editor-list" class="grid grid-cols-1 gap-4 mb-6"></div>
 
-        <button onclick="applyConfiguration()" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-tighter rounded-xl transition-all shadow-lg shadow-blue-900/20 text-white">
+        <button onclick="applyConfiguration()" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-tighter rounded-xl transition-all shadow-lg shadow-blue-900/20">
             Apply & Restart Simulation
         </button>
     </div>
 
     <!-- FLOATING DNA TOOLTIP -->
-    <div id="chart-dna-tooltip" class="text-white">
-        <div id="dna-header" class="flex justify-between items-center mb-3 text-white"></div>
-        <div id="dna-bars" class="space-y-1.5 text-white"></div>
+    <div id="chart-dna-tooltip">
+        <div id="dna-header" class="flex justify-between items-center mb-3"></div>
+        <div id="dna-bars" class="space-y-1.5"></div>
     </div>
 
     <script>
+        /** * DATA MAPPING & CONFIGURATION
+         */
         const RACKET_LISTS = {
             "Divine": ["Crimson Void", "Cyberflare", "Divine Spin", "Dragons Breath", "Eternal Heart", "Grim Valentine", "HoloShock", "HyperPulse", "Jinhuo", "Jinlian", "Jinshui", "Kitty", "Neon Chaos", "Night King", "Obsidian Sight", "Scraplung", "Shadow Light", "Soul Hunter", "Soul Smasher", "Winged Shadow", "Winter Ivystrike"],
             "Mythic": ["Esla Racket", "Gazo Racket", "Gojin Racket", "Gomu Racket", "Infernish Racket", "Jins Racket", "Kurai Racket", "Kyoki Racket", "Sawgrave", "Senshu Racket", "Turtle"],
             "Legendary": [], "Uncommon": [], "Common": []
         };
-        const DIVINE_IDENTITY_MAP = { "Soul Smasher": ["Dash", "Power"], "Dragons Breath": ["Speed", "Spin"], "Divine Spin": ["Jump", "Spin"], "Neon Chaos": ["Speed", "Reach"], "Winged Shadow": ["Dash", "Speed"], "Night King": ["Jump", "Power"], "Obsidian Sight": ["Jump", "Reach"], "Soul Hunter": ["Movement", "Spin"], "Crimson Void": ["Dash", "Power"], "Shadow Light": ["Jump", "Reach"], "Winter Ivystrike": ["Dash", "Power"], "Eternal Heart": ["Dash", "Reach"], "Grim Valentine": ["Power", "Spin"], "Scraplung": ["Dash", "Speed"], "HoloShock": ["Movement", "Speed"], "Cyberflare": ["Power", "Reach"], "HyperPulse": ["Jump", "Reach"], "Jinshui": ["Power", "Speed"], "Jinhuo": ["Jump", "Power"], "Jinlian": ["Speed", "Spin"], "Kitty": ["Dash", "Jump"] };
+
+        const DIVINE_IDENTITY_MAP = {
+            "Soul Smasher": ["Dash", "Power"], "Dragons Breath": ["Speed", "Spin"], "Divine Spin": ["Jump", "Spin"], "Neon Chaos": ["Speed", "Reach"], "Winged Shadow": ["Dash", "Speed"], "Night King": ["Jump", "Power"], "Obsidian Sight": ["Jump", "Reach"], "Soul Hunter": ["Movement", "Spin"], "Crimson Void": ["Dash", "Power"], "Shadow Light": ["Jump", "Reach"], "Winter Ivystrike": ["Dash", "Power"], "Eternal Heart": ["Dash", "Reach"], "Grim Valentine": ["Power", "Spin"], "Scraplung": ["Dash", "Speed"], "HoloShock": ["Movement", "Speed"], "Cyberflare": ["Power", "Reach"], "HyperPulse": ["Jump", "Reach"], "Jinshui": ["Power", "Speed"], "Jinhuo": ["Jump", "Power"], "Jinlian": ["Speed", "Spin"], "Kitty": ["Dash", "Jump"]
+        };
+
+        const DIVINE_BANNED_MAP = {
+            "Soul Smasher": "Reach", "Dragons Breath": "Dash", "Divine Spin": "Movement", "Neon Chaos": "Dash", "Winged Shadow": "Spin", "Night King": "Reach", "Obsidian Sight": "Power", "Soul Hunter": "Jump", "Crimson Void": "Spin", "Shadow Light": "Power", "Winter Ivystrike": "Speed", "Eternal Heart": "Jump", "Grim Valentine": "Jump", "Scraplung": "Movement", "HoloShock": "Reach", "Cyberflare": "Movement", "HyperPulse": "Spin", "Jinshui": "", "Jinhuo": "Spin", "Jinlian": "Movement", "Kitty": "Spin"
+        };
+
+        const RARITY_COLORS = { "Divine": "text-yellow-500", "Mythic": "text-purple-500", "Legendary": "text-blue-500", "Uncommon": "text-green-500", "Common": "text-gray-400" };
         const ROLL_CONFIG = { "Divine": [9, 10, 11], "Mythic": [6, 7, 8], "Legendary": [5, 6, 7], "Uncommon": [4, 5, 6], "Common": [3, 4, 5] };
         const STAT_ORDER = ["Movement", "Dash", "Jump", "Power", "Speed", "Reach", "Spin"];
         const SHARD_COSTS = [1, 1, 3, 3, 4, 4, 5, 5, 5, 5, 6, 7, 7, 6];
 
-        let config = { name: "Neon Chaos", rarity: "Divine", startLevel: 1, rollMode: "rng", stats: [] };
+        let config = { name: "Neon Chaos", rarity: "Divine", startLevel: 1, maxLevel: 15, rollMode: "rng", stats: [] };
         let currentStats = {};
         let level = 1;
         let chartInstance = null;
 
+        /**
+         * FUNGSI LOGIKA UTAMA
+         */
         function initEditor() {
-            document.getElementById('cfg-rarity').value = "Divine";
+            document.getElementById('cfg-rarity').value = config.rarity;
             updateRacketNameDropdown(); 
-            updateRollModeOptions("Divine");
-            document.getElementById('cfg-name').value = "Neon Chaos";
+            updateRollModeOptions(config.rarity);
+            document.getElementById('cfg-name').value = config.name;
+            document.getElementById('cfg-start-level').value = config.startLevel;
+            document.getElementById('cfg-roll-mode').value = config.rollMode;
             handleRacketNameChange();
             applyConfiguration();
         }
 
         function updateRacketNameDropdown() {
-            const r = document.getElementById('cfg-rarity').value;
-            const select = document.getElementById('cfg-name');
-            select.innerHTML = '';
-            (RACKET_LISTS[r] || []).forEach(name => {
-                const opt = document.createElement('option'); opt.value = name; opt.innerText = name; select.appendChild(opt);
+            const rarity = document.getElementById('cfg-rarity').value;
+            const nameDropdown = document.getElementById('cfg-name');
+            const names = RACKET_LISTS[rarity] || [];
+            nameDropdown.innerHTML = '';
+            names.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name; opt.innerText = name;
+                nameDropdown.appendChild(opt);
             });
-            const custom = document.createElement('option'); custom.value = "custom"; custom.innerText = "Other"; select.appendChild(custom);
+            const customOpt = document.createElement('option');
+            customOpt.value = "custom"; customOpt.innerText = "Other";
+            nameDropdown.appendChild(customOpt);
         }
 
         function updateRollModeOptions(rarity) {
-            const select = document.getElementById('cfg-roll-mode');
+            const rollModeSelect = document.getElementById('cfg-roll-mode');
             const range = ROLL_CONFIG[rarity];
-            select.innerHTML = `<option value="rng">Normal Random (${range[0]}-${range[2]})</option>`;
+            rollModeSelect.innerHTML = '';
+            const rndOpt = document.createElement('option');
+            rndOpt.value = "rng"; rndOpt.innerText = `Random (${range[0]}-${range[2]})`;
+            rollModeSelect.appendChild(rndOpt);
             range.forEach(val => {
-                const opt = document.createElement('option'); opt.value = `fixed${val}`; opt.innerText = `Fixed +${val}`; select.appendChild(opt);
+                const opt = document.createElement('option');
+                opt.value = `fixed${val}`; opt.innerText = `Fixed +${val}`;
+                rollModeSelect.appendChild(opt);
             });
         }
 
         function handleRarityChange() {
             const rarity = document.getElementById('cfg-rarity').value;
+            const nameDropdown = document.getElementById('cfg-name');
             updateRacketNameDropdown();
             updateRollModeOptions(rarity);
-            if (["Legendary", "Uncommon", "Common"].includes(rarity)) document.getElementById('cfg-name').value = "custom";
+            if (["Legendary", "Uncommon", "Common"].includes(rarity)) nameDropdown.value = "custom";
             handleRacketNameChange();
             updateAllStatBounds();
         }
@@ -364,28 +348,44 @@
             const list = document.getElementById('stat-editor-list');
             const customInput = document.getElementById('cfg-custom-name');
             list.innerHTML = '';
+
             if (name === "custom") {
                 customInput.classList.remove('hidden');
-                STAT_ORDER.slice(0, 4).forEach(n => addStatRow({ name: n, base: (rarity === "Divine" ? 33 : 25), isIdentity: false }));
-            } else {
-                customInput.classList.add('hidden');
-                let statsToRender = [];
-                if (rarity === "Divine" && DIVINE_IDENTITY_MAP[name]) {
-                    const ids = DIVINE_IDENTITY_MAP[name];
-                    const pool = STAT_ORDER.filter(s => !ids.includes(s)).sort(() => 0.5 - Math.random()).slice(0, 2);
-                    statsToRender = [...ids.map(n=>({n,id:true})), ...pool.map(n=>({n,id:false}))].sort((a,b)=>STAT_ORDER.indexOf(a.n)-STAT_ORDER.indexOf(b.n));
-                } else {
-                    statsToRender = STAT_ORDER.slice(0, 4).map(n => ({ n, id: false }));
-                }
-                statsToRender.forEach(obj => addStatRow({ name: obj.n, base: (rarity === "Divine" ? 33 : 25), isIdentity: obj.id }));
+                STAT_ORDER.slice(0, 4).forEach(n => addStatRow({ id: 's' + Math.random(), name: n, base: (rarity === "Divine" ? 33 : 25), isIdentity: false }));
+                return;
             }
+            customInput.classList.add('hidden');
+
+            let statsToRender = [];
+            if (rarity === "Divine" && DIVINE_IDENTITY_MAP[name]) {
+                const idStatsNames = DIVINE_IDENTITY_MAP[name];
+                const bannedStat = DIVINE_BANNED_MAP[name];
+                const idStats = idStatsNames.map(sName => ({ name: sName, id: true }));
+                const pool = STAT_ORDER.filter(s => !idStatsNames.includes(s) && s !== bannedStat);
+                const randomStats = pool.sort(() => 0.5 - Math.random()).slice(0, 2).map(sName => ({ name: sName, id: false }));
+                statsToRender = [...idStats, ...randomStats];
+            } else {
+                statsToRender = STAT_ORDER.slice(0, 4).map(n => ({ name: n, id: false }));
+            }
+            statsToRender.sort((a, b) => STAT_ORDER.indexOf(a.name) - STAT_ORDER.indexOf(b.name));
+            statsToRender.forEach(statObj => addStatRow({ id: 's' + Math.random(), name: statObj.name, base: (rarity === "Divine" ? 33 : 25), isIdentity: statObj.id }));
         }
 
         function getStatBounds() {
             const rarity = document.getElementById('cfg-rarity').value;
+            const nameVal = document.getElementById('cfg-name').value;
             const startLevel = parseInt(document.getElementById('cfg-start-level').value) || 1;
-            if (startLevel > 1) return { min: 0, max: 100 };
-            return rarity === "Divine" ? { min: 30, max: 40 } : rarity === "Mythic" ? { min: 25, max: 35 } : { min: 10, max: 35 };
+            
+            if (startLevel > 1 || nameVal === "custom") return { min: 0, max: 100 };
+            
+            let minVal = 10;
+            if (rarity === "Divine") minVal = 30; 
+            else if (["Mythic", "Legendary"].includes(rarity)) minVal = 25;
+            
+            return { 
+                min: minVal, 
+                max: (rarity === "Divine") ? 40 : 35 
+            };
         }
 
         function addStatRow(data) {
@@ -393,55 +393,88 @@
             const div = document.createElement('div');
             const bounds = getStatBounds();
             let baseVal = Math.max(bounds.min, Math.min(bounds.max, data.base));
-            let selectHtml = `<select class="flex-grow bg-slate-900 border border-slate-700 rounded p-1 text-xs name-input text-white outline-none focus:border-blue-500">`;
+
+            let selectHtml = `<select class="flex-grow bg-slate-900 border border-slate-700 rounded p-1 text-xs name-input" onchange="sortStatEditorList()">`;
             STAT_ORDER.forEach(s => { selectHtml += `<option value="${s}" ${s === data.name ? 'selected' : ''}>${s}</option>`; });
             selectHtml += `</select>`;
-            div.className = "flex items-center gap-3 bg-slate-800/50 p-2 rounded border border-slate-700 stat-row text-white text-white";
+
+            div.className = "flex flex-col gap-2 bg-slate-800/50 p-3 rounded border border-slate-700 stat-row shadow-sm";
             div.innerHTML = `
-                ${selectHtml}
-                <div class="slider-container relative flex items-center text-white text-white">
-                    <div class="slider-popup text-white">
-                        <input type="range" min="${bounds.min}" max="${bounds.max}" value="${baseVal}" class="vertical-slider base-input-slider" 
-                            oninput="this.closest('.slider-container').querySelector('.base-input-text').value = this.value">
+                <div class="flex gap-2 items-center">
+                    ${selectHtml}
+                    <div class="slider-container relative">
+                        <div class="slider-popup">
+                            <input type="range" min="${bounds.min}" max="${bounds.max}" value="${baseVal}" class="vertical-slider base-input-slider" 
+                                oninput="this.closest('.slider-container').querySelector('.base-input-text').value = this.value">
+                        </div>
+                        <input type="number" min="${bounds.min}" max="${bounds.max}" value="${baseVal}" class="w-12 bg-slate-900 border border-slate-700 rounded p-1 text-xs base-input-text text-center font-bold"
+                            oninput="updateSingleStatBounds(this)">
                     </div>
-                    <input type="number" min="0" max="100" value="${baseVal}" class="w-16 bg-slate-900 border border-slate-700 rounded p-1 text-center font-bold text-white base-input-text outline-none focus:border-blue-500"
-                        oninput="const s = this.closest('.slider-container').querySelector('.base-input-slider'); if(s) s.value = this.value">
+                    <label class="flex items-center gap-1 text-[10px] font-bold text-blue-400 cursor-pointer">
+                        <input type="checkbox" ${data.isIdentity ? 'checked' : ''} class="identity-checkbox"> ID
+                    </label>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-400 font-bold px-2">×</button>
                 </div>
-                <label class="flex items-center gap-1 text-[10px] font-bold text-blue-400 cursor-pointer">
-                    <input type="checkbox" ${data.isIdentity ? 'checked' : ''} class="identity-checkbox text-white"> ID
-                </label>
-                <button onclick="this.parentElement.remove()" class="text-slate-500 hover:text-red-500 px-2 transition-colors text-xl font-bold">×</button>
             `;
             list.appendChild(div);
+        }
+
+        function updateSingleStatBounds(inputEl) {
+            const bounds = getStatBounds();
+            if(parseInt(inputEl.value) > bounds.max) inputEl.value = bounds.max;
+            const slider = inputEl.previousElementSibling.querySelector('.base-input-slider');
+            if (slider) { 
+                slider.min = bounds.min; 
+                slider.max = bounds.max; 
+                slider.value = inputEl.value; 
+            }
+        }
+
+        function sortStatEditorList() {
+            const list = document.getElementById('stat-editor-list');
+            const rows = Array.from(list.querySelectorAll('.stat-row'));
+            rows.sort((a, b) => STAT_ORDER.indexOf(a.querySelector('.name-input').value) - STAT_ORDER.indexOf(b.querySelector('.name-input').value));
+            rows.forEach(row => list.appendChild(row));
         }
 
         function updateAllStatBounds() {
             const bounds = getStatBounds();
             document.querySelectorAll('.stat-row').forEach(row => {
-                const input = row.querySelector('.base-input-text');
                 const slider = row.querySelector('.base-input-slider');
-                if(input) input.min = bounds.min; 
-                if(slider) { slider.min = bounds.min; slider.max = bounds.max; }
+                const input = row.querySelector('.base-input-text');
+                if(!slider || !input) return;
+                slider.min = bounds.min; slider.max = bounds.max;
+                input.min = bounds.min; input.max = bounds.max;
+                if (parseInt(input.value) < bounds.min) { input.value = bounds.min; slider.value = bounds.min; }
+                if (parseInt(input.value) > bounds.max) { input.value = bounds.max; slider.value = bounds.max; }
             });
         }
 
+        function addNewStatRow() {
+            const bounds = getStatBounds();
+            addStatRow({ id: 's' + Math.random(), name: "Movement", base: (bounds.max > 33 ? 33 : bounds.min), isIdentity: false });
+            sortStatEditorList();
+        }
+
         function applyConfiguration() {
-            const r = document.getElementById('cfg-rarity').value;
+            const rarity = document.getElementById('cfg-rarity').value;
             const nameSelect = document.getElementById('cfg-name');
-            config.rarity = r;
-            config.name = nameSelect.value === "custom" ? (document.getElementById('cfg-custom-name').value || "Custom Racket") : nameSelect.value;
+            const customName = document.getElementById('cfg-custom-name').value;
+            config.rarity = rarity;
+            config.name = (nameSelect.value === "custom") ? (customName || "Custom Racket") : nameSelect.value;
             config.startLevel = parseInt(document.getElementById('cfg-start-level').value) || 1;
+            config.maxLevel = 15;
             config.rollMode = document.getElementById('cfg-roll-mode').value;
+            if (config.startLevel > config.maxLevel) config.startLevel = config.maxLevel;
+            const bounds = getStatBounds();
+            const rows = document.querySelectorAll('.stat-row');
             config.stats = [];
-            document.querySelectorAll('.stat-row').forEach((row, i) => {
-                config.stats.push({ 
-                    id: 's'+i, 
-                    name: row.querySelector('.name-input').value, 
-                    base: parseInt(row.querySelector('.base-input-text').value) || 0,
-                    isIdentity: row.querySelector('.identity-checkbox').checked 
-                });
+            rows.forEach((row, index) => {
+                const sName = row.querySelector('.name-input').value;
+                let baseVal = Math.min(bounds.max, parseInt(row.querySelector('.base-input-text').value) || 0);
+                config.stats.push({ id: 's' + index, name: sName, base: baseVal, isIdentity: row.querySelector('.identity-checkbox').checked });
             });
-            config.stats.sort((a,b)=>STAT_ORDER.indexOf(a.name)-STAT_ORDER.indexOf(b.name));
+            config.stats.sort((a, b) => STAT_ORDER.indexOf(a.name) - STAT_ORDER.indexOf(b.name));
             resetSim();
         }
 
@@ -450,9 +483,13 @@
             currentStats = {};
             config.stats.forEach(s => { currentStats[s.id] = s.base; });
             document.getElementById('disp-name').innerText = config.name;
-            document.getElementById('disp-rarity').innerText = config.rarity;
-            document.getElementById('currentLevel').innerText = level;
-            document.getElementById('history').innerHTML = '<div class="opacity-30">Waiting for interaction...</div>';
+            const dispRarity = document.getElementById('disp-rarity');
+            dispRarity.innerText = config.rarity;
+            Object.values(RARITY_COLORS).forEach(cls => dispRarity.classList.remove(cls));
+            dispRarity.classList.add(RARITY_COLORS[config.rarity] || "text-white");
+            document.getElementById('maxLevelText').innerText = config.maxLevel;
+            document.getElementById('history').innerHTML = '<div class="text-gray-500 italic text-xs">Waiting for first upgrade...</div>';
+            document.getElementById('exp-bar').style.width = '0%';
             renderRacketStats();
             updateSimulationState();
         }
@@ -461,95 +498,63 @@
             const container = document.getElementById('stats-container');
             container.innerHTML = '';
             config.stats.forEach(s => {
-                const labelClass = s.isIdentity ? 'identity-glow font-bold' : 'text-slate-300 font-medium';
-                container.innerHTML += `
-                    <div class="space-y-1.5 text-white">
-                        <div class="flex justify-between items-center px-0.5 text-white">
-                            <span class="text-[11px] uppercase tracking-wide ${labelClass}">${s.name}${s.isIdentity ? ' ★' : ''}</span>
-                            <span id="val-${s.id}" class="text-[12px] font-black text-white">0</span>
-                        </div>
-                        <div class="stat-bar-bg h-3 relative text-white">
-                            <div id="bar-${s.id}" class="stat-bar-fill"></div>
-                        </div>
-                    </div>`;
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-4";
+                div.innerHTML = `<span class="w-24 font-bold text-sm ${s.isIdentity ? 'text-blue-400 identity-glow' : 'text-gray-100'}">${s.name}${s.isIdentity ? ' ★' : ''}</span><div class="flex-grow stat-bar-bg h-6"><div id="bar-${s.id}" class="stat-bar-fill" style="width: 0%"></div></div><span id="val-${s.id}" class="w-8 text-right font-bold text-sm">0</span>`;
+                container.appendChild(div);
             });
+        }
+
+        function calculateRemainingShards() {
+            if (level >= config.maxLevel) return 0;
+            const startIdx = level - 1; const endIdx = config.maxLevel - 1;
+            return (startIdx < 0) ? 0 : SHARD_COSTS.slice(startIdx, endIdx).reduce((a, b) => a + b, 0);
         }
 
         function updateSimulationState() {
             document.getElementById('currentLevel').innerText = level;
-            document.getElementById('remainingShards').innerText = SHARD_COSTS.slice(level-1, 14).reduce((a,b)=>a+b, 0);
-            let totalPts = 0, basePts = 0;
+            document.getElementById('remainingShards').innerText = calculateRemainingShards();
             config.stats.forEach(s => {
-                const val = currentStats[s.id]; totalPts += val; basePts += s.base;
-                const bar = document.getElementById(`bar-${s.id}`);
-                const text = document.getElementById(`val-${s.id}`);
-                if(!bar || !text) return;
+                const val = currentStats[s.id]; const bar = document.getElementById(`bar-${s.id}`); const text = document.getElementById(`val-${s.id}`);
+                if (!bar || !text) return;
                 text.innerText = val;
-                bar.className = 'stat-bar-fill ' + (val >= 90 ? 'stat-extreme' : val >= 80 ? 'stat-high' : val >= 70 ? 'stat-medium' : 'stat-low');
-                bar.style.width = `${Math.min(val, 100)}%`;
+                bar.classList.remove('stat-low', 'stat-medium', 'stat-high', 'stat-extreme');
+                if (val >= 90) bar.classList.add('stat-extreme');
+                else if (val >= 80) bar.classList.add('stat-high');
+                else if (val >= 70) bar.classList.add('stat-medium');
+                else bar.classList.add('stat-low');
+                bar.style.width = `${Math.min((val / 100) * 100, 100)}%`;
             });
-
-            const liveGrade = getLiveGradeData(totalPts, config.rarity, currentStats, level);
-            document.getElementById('realtime-grade').innerText = liveGrade.grade;
-            document.getElementById('realtime-grade').className = `grade-badge ${liveGrade.class}`;
-
-            const basePtsNorm = config.rarity === "Mythic" ? (basePts/140)*160 : basePts;
-            const potGrade = getBaseGradeData(basePtsNorm);
-            document.getElementById('potential-grade').innerText = potGrade.grade;
-            document.getElementById('potential-grade').className = `grade-badge ${potGrade.class}`;
-        }
-
-        function getLiveGradeData(pts, rarity, statsObj, currentLevel) {
-            if(!["Divine", "Mythic"].includes(rarity)) return { grade: "U", class: "grade-u" };
-            let p = rarity === "Mythic" ? pts * 1.3 : pts;
-            let c70 = 0, c80 = 0;
-            for(let id in statsObj) { if(statsObj[id] >= 80) c80++; if(statsObj[id] >= 70) c70++; }
-            if (currentLevel === 15 && c70 === 1) return { grade: "B", class: "grade-b" };
-            if (c80 >= 3) return { grade: "S", class: "grade-s" };
-            if (c70 >= 3 || c80 >= 2) return p >= 295 ? { grade: "S", class: "grade-s" } : { grade: "A", class: "grade-a" };
-            if (p >= 295) return { grade: "S", class: "grade-s" };
-            if (p >= 275) return { grade: "A", class: "grade-a" };
-            if (p >= 255) return { grade: "B", class: "grade-b" };
-            if (p >= 235) return { grade: "C", class: "grade-c" };
-            return { grade: "D", class: "grade-d" };
-        }
-
-        function getBaseGradeData(p) {
-            if (p >= 155) return { grade: "S", class: "grade-s" };
-            if (p >= 145) return { grade: "A", class: "grade-a" };
-            if (p >= 135) return { grade: "B", class: "grade-b" };
-            if (p >= 125) return { grade: "C", class: "grade-c" };
-            return { grade: "D", class: "grade-d" };
+            const btn = document.getElementById('btn-upgrade'); const btnAuto = document.getElementById('btn-auto');
+            const isMax = level >= config.maxLevel;
+            btn.disabled = btnAuto.disabled = isMax;
+            btn.innerText = isMax ? "MAXIMUM" : "Upgrade";
+            btn.style.opacity = btnAuto.style.opacity = isMax ? "0.5" : "1";
         }
 
         function upgradeLevel() {
-            if (level >= 15 || config.stats.length === 0) return;
-            let tw = 0; const wts = {};
+            if (level >= config.maxLevel || config.stats.length === 0) return;
+            let totalW = 0; const weights = {};
             config.stats.forEach(s => {
                 const v = currentStats[s.id];
-                let w = v >= 90 ? 0.5 : v >= 80 ? 2 : v >= 70 ? 20 : 100;
-                if(s.isIdentity) w *= 1.25;
-                wts[s.id] = w; tw += w;
+                let w = (v >= 90) ? 0.5 : (v >= 80) ? 2 : (v >= 70) ? 20 : 100;
+                if (s.isIdentity) w *= 1.2;
+                weights[s.id] = w; totalW += w;
             });
-            let r = Math.random() * tw, chosenId = config.stats[0].id;
-            for(let id in wts) { if(r < wts[id]) { chosenId = id; break; } r -= wts[id]; }
-            const rngRange = ROLL_CONFIG[config.rarity] || [1,2,3];
-            let pts = config.rollMode === "rng" ? Math.floor(Math.random()*(rngRange[2]-rngRange[0]+1))+rngRange[0] : parseInt(config.rollMode.replace("fixed",""));
+            let roll = Math.random() * totalW; let chosenId = config.stats[0].id;
+            for (const id in weights) { if (roll < weights[id]) { chosenId = id; break; } roll -= weights[id]; }
+            const range = ROLL_CONFIG[config.rarity] || [1, 2, 3];
+            let pts = config.rollMode === "rng" ? Math.floor(Math.random() * (range[2] - range[0] + 1)) + range[0] : parseInt(config.rollMode.replace("fixed", ""));
             currentStats[chosenId] += pts;
+            const statObj = config.stats.find(s => s.id === chosenId);
             level++;
-            const sObj = config.stats.find(s=>s.id===chosenId);
-            addHistory(level, sObj.name, pts, currentStats[chosenId]);
+            addHistory(level, statObj.name, pts, currentStats[chosenId]);
             updateSimulationState();
-            const bar = document.getElementById('exp-bar'); bar.style.width = '100%'; setTimeout(()=>{ if(level<15) bar.style.width = '0%'; }, 200);
+            const expBar = document.getElementById('exp-bar'); expBar.style.width = '100%';
+            setTimeout(() => { if(level < config.maxLevel) expBar.style.width = '0%'; }, 200);
         }
 
-        function addHistory(lvl, name, pts, val) {
-            const h = document.getElementById('history'); if(lvl === (config.startLevel+1)) h.innerHTML = '';
-            const badge = val >= 90 ? '<span class="text-purple-400 font-bold ml-1">LGD</span>' : val >= 80 ? '<span class="text-red-400 font-bold ml-1">HRD</span>' : '';
-            h.innerHTML = `<div><span class="opacity-40 text-white">LV${lvl}:</span> <span class="text-white font-bold uppercase">${name}</span> <span class="text-emerald-400 font-black">+${pts}</span>${badge}</div>` + h.innerHTML;
-        }
-
-        function autoUpgrade() { while(level < 15) upgradeLevel(); }
+        function autoUpgrade() { let s = 0; while (level < config.maxLevel && s < 100) { upgradeLevel(); s++; } }
 
         function triggerAnalysis() {
             const runs = parseInt(document.getElementById('cfg-analysis-runs').value) || 100;
@@ -557,209 +562,188 @@
         }
 
         function runAnalysis(iterations) {
-            if(config.stats.length === 0) return;
-            const res = {}; config.stats.forEach(s => { res[s.id] = { sumVal: 0, count70: 0, count80: 0 }; });
-            const c70 = {}, c80 = {}, distMap = {};
+            if (config.stats.length === 0) return;
+            const results = {};
+            config.stats.forEach(s => { results[s.id] = { name: s.name, count70: 0, count80: 0, sumVal: 0, isIdentity: s.isIdentity }; });
+            const combo70 = {}; const combo80 = {};
+            const distMap = {};
 
-            for(let i=0; i<iterations; i++) {
-                let simStats = {}; config.stats.forEach(s => simStats[s.id] = s.base);
+            for (let i = 0; i < iterations; i++) {
+                let simStats = {}; config.stats.forEach(s => { simStats[s.id] = s.base; });
                 let simPath = {}; config.stats.forEach(s => simPath[s.id] = 0);
-                let simLvl = config.startLevel;
+                let simLevel = config.startLevel;
 
-                while(simLvl < 15) {
-                    let tw = 0; const wts = {};
+                while (simLevel < config.maxLevel) {
+                    let tW = 0; const wts = {};
                     config.stats.forEach(s => {
                         let v = simStats[s.id];
-                        let w = v >= 90 ? 0.5 : v >= 80 ? 2 : v >= 70 ? 20 : 100;
-                        if(s.isIdentity) w *= 1.25;
-                        wts[s.id] = w; tw += w;
+                        let w = (v >= 90) ? 0.5 : (v >= 80) ? 2 : (v >= 70) ? 20 : 100;
+                        if (s.isIdentity) w *= 1.2;
+                        wts[s.id] = w; tW += w;
                     });
-                    let r = Math.random() * tw, cId = config.stats[0].id;
-                    for(let id in wts) { if(r < wts[id]) { cId = id; break; } r -= wts[id]; }
-                    const rngRange = ROLL_CONFIG[config.rarity] || [1,2,3];
-                    let pts = config.rollMode === "rng" ? Math.floor(Math.random()*(rngRange[2]-rngRange[0]+1))+rngRange[0] : parseInt(config.rollMode.replace("fixed",""));
-                    simStats[cId] += pts; simPath[cId]++; simLvl++;
+                    let r = Math.random() * tW; let cId = config.stats[0].id;
+                    for (const id in wts) { if (r < wts[id]) { cId = id; break; } r -= wts[id]; }
+                    const rngRange = ROLL_CONFIG[config.rarity] || [1, 2, 3];
+                    let p = config.rollMode === "rng" ? Math.floor(Math.random() * (rngRange[2] - rngRange[0] + 1)) + rngRange[0] : parseInt(config.rollMode.replace("fixed", ""));
+                    simStats[cId] += p; simPath[cId]++; simLevel++;
                 }
 
+                // Path Distribution Tracking
                 const key = Object.values(simPath).join('|');
                 if(!distMap[key]) distMap[key] = { count: 0, stats: {...simStats}, path: {...simPath} };
                 distMap[key].count++;
 
+                let n70 = 0; let n80 = 0;
                 config.stats.forEach(s => {
-                    const fv = simStats[s.id];
-                    res[s.id].sumVal += fv;
-                    if(fv >= 80) res[s.id].count80++;
-                    if(fv >= 70) res[s.id].count70++;
+                    const fV = simStats[s.id];
+                    results[s.id].sumVal += fV;
+                    if (fV >= 80) { results[s.id].count80++; n80++; }
+                    if (fV >= 70) { results[s.id].count70++; n70++; }
                 });
-                
-                let n70 = Object.values(simStats).filter(v => v >= 70).length;
-                let n80 = Object.values(simStats).filter(v => v >= 80).length;
-                c70[n70] = (c70[n70] || 0) + 1;
-                c80[n80] = (c80[n80] || 0) + 1;
+                combo70[n70] = (combo70[n70] || 0) + 1;
+                combo80[n80] = (combo80[n80] || 0) + 1;
             }
-            displayAnalysis(res, iterations, c70, c80, Object.values(distMap).sort((a,b)=>b.count-a.count));
+            displayAnalysis(results, iterations, combo70, combo80, Object.values(distMap).sort((a,b)=>b.count-a.count));
         }
 
         function displayAnalysis(results, total, combo70, combo80, outcomes) {
             const modal = document.getElementById('analysis-modal');
             const content = document.getElementById('analysis-content');
+            document.getElementById('analysis-title').innerText = `Analysis Report (${total}x Runs)`;
             modal.classList.remove('hidden');
-            document.getElementById('analysis-title').innerText = `Analysis: ${total.toLocaleString()} Runs`;
 
-            const renderStatBlock = (type, outStats = null, outPath = null) => {
+            const sorted = Object.values(results).sort((a, b) => (b.count80 !== a.count80) ? b.count80 - a.count80 : b.count70 - a.count70);
+            const max80 = Math.max(...sorted.map(r => r.count80)), min80 = Math.min(...sorted.map(r => r.count80));
+            const max70 = Math.max(...sorted.map(r => r.count70)), min70 = Math.min(...sorted.map(r => r.count70));
+
+            const renderSmallStatBlock = (outStats, outPath) => {
                 return config.stats.map(s => {
-                    let val = 0, rolls = 0;
-                    if(type === 'base') val = s.base;
-                    else if(type === 'avg') val = Math.round(results[s.id].sumVal / total);
-                    else if(type === 'outcome') { val = outStats[s.id]; rolls = outPath[s.id]; }
-                    const p = Math.min(val, 100), c = val >= 90 ? 'stat-extreme' : val >= 80 ? 'stat-high' : val >= 70 ? 'stat-medium' : 'stat-low';
+                    const val = outStats[s.id], rolls = outPath[s.id], p = Math.min(val, 100), c = val >= 90 ? 'stat-extreme' : val >= 80 ? 'stat-high' : val >= 70 ? 'stat-medium' : 'stat-low';
                     return `
-                        <div class="space-y-0.5 text-white">
-                            <div class="flex justify-between text-[10px] font-black uppercase tracking-widest text-white">
-                                <span class="${s.isIdentity ? 'text-blue-400' : 'text-slate-500'} text-white">${s.name} ${rolls ? `<span class="text-slate-600 font-mono text-[9px] text-white">[${rolls}r]</span>` : ''}</span>
-                                <span class="text-white text-white">${val}</span>
+                        <div class="space-y-0.5">
+                            <div class="flex justify-between text-[9px] font-black uppercase tracking-widest leading-none">
+                                <span class="${s.isIdentity ? 'text-blue-400' : 'text-slate-500'}">${s.name} [${rolls}]</span>
+                                <span class="text-white font-black text-[12px]">${val}</span>
                             </div>
-                            <div class="stat-bar-bg h-1.5 border-0 text-white">
-                                <div class="stat-bar-fill text-white ${c}" style="width: ${p}%"></div>
+                            <div class="stat-bar-bg h-1 border-0 rounded-sm">
+                                <div class="stat-bar-fill ${c}" style="width: ${p}%"></div>
                             </div>
                         </div>`;
                 }).join('');
             };
 
-            const sectionHeader = (title) => `<div class="flex items-center gap-4 mb-4 text-white text-white text-white text-white"><h3 class="text-sm font-black uppercase tracking-[0.3em] text-blue-500 text-white text-white">${title}</h3><div class="h-px flex-grow bg-blue-500/20 text-white text-white"></div></div>`;
+            let html = `<div><h3 class="text-xs font-bold text-gray-400 uppercase mb-3 text-center">Expected Result (Averages)</h3><div class="space-y-4 bg-slate-900/60 p-5 rounded-2xl border border-white/5 shadow-inner">`;
+            config.stats.forEach(s => {
+                const avg = Math.round(results[s.id].sumVal / total);
+                const percent = Math.min((avg / 100) * 100, 100);
+                const colorClass = avg >= 90 ? 'stat-extreme' : avg >= 80 ? 'stat-high' : avg >= 70 ? 'stat-medium' : 'stat-low';
+                html += `
+                    <div class="flex items-center gap-4">
+                        <span class="w-24 text-[11px] font-black uppercase truncate ${s.isIdentity ? 'text-blue-300 identity-glow' : 'text-gray-300'}">${s.name}</span>
+                        <div class="flex-grow stat-bar-bg h-4 rounded-full">
+                            <div class="stat-bar-fill rounded-full ${colorClass}" style="width: ${percent}%"></div>
+                        </div>
+                        <span class="w-8 text-right text-[11px] font-mono font-black">${avg}</span>
+                    </div>`;
+            });
+            html += `</div></div>`;
 
-            // Prepare Top Outcomes
-            const topOutcomesCount = 15;
+            html += `<div><h3 class="text-xs font-bold text-gray-400 uppercase mb-3 text-center">Multi-Stat Hit Summary</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
+            const totalStatsNum = config.stats.length;
+            const renderFullRangeBlock = (title, data, threshold) => {
+                let b = `<div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700"><p class="text-[10px] font-black uppercase text-gray-500 mb-3 border-b border-slate-700 pb-2">${title}</p><ul class="space-y-2 text-[11px]">`;
+                for (let count = totalStatsNum; count >= 0; count--) {
+                    const freq = data[count] || 0;
+                    const perc = Math.round(freq / total * 100);
+                    const labelColor = perc >= 50 ? 'text-green-400' : perc >= 20 ? 'text-yellow-400' : perc > 0 ? 'text-gray-300' : 'text-gray-600 opacity-50';
+                    b += `<li class="flex items-center gap-2 ${labelColor}"><span class="font-black text-[13px] w-8">${perc}%</span><span class="opacity-80 uppercase tracking-tighter text-[9px]">chance to have ${count} stats over ${threshold}</span></li>`;
+                }
+                return b + `</ul></div>`;
+            };
+            html += renderFullRangeBlock("Stats Over 70", combo70, "70");
+            html += renderFullRangeBlock("Stats Over 80", combo80, "80");
+            html += `</div></div>`;
+
+            html += `<div><h3 class="text-xs font-bold text-gray-400 uppercase mb-3 text-center">Individual Probabilities</h3><div class="overflow-hidden rounded-xl border border-slate-700">
+                <table class="w-full text-left text-[11px]">
+                    <thead class="bg-slate-900 text-gray-400 uppercase font-black"><tr><th class="p-3">Stat</th><th class="p-3 text-center">> 70</th><th class="p-3 text-center">> 80</th></tr></thead>
+                    <tbody class="divide-y divide-slate-700 bg-slate-800/30">`;
+            sorted.forEach(res => {
+                const getC = (v, ma, mi) => (ma === mi) ? "text-white" : (v === ma) ? "text-green-400 font-black" : (v === mi) ? "text-red-500 font-bold" : "text-gray-300";
+                html += `<tr>
+                    <td class="p-3 font-bold ${res.isIdentity ? 'text-blue-400' : 'text-gray-100'}">${res.name}</td>
+                    <td class="p-3 text-center ${getC(res.count70, max70, min70)} font-mono">
+                        <div class="text-[13px]">${Math.round(res.count70/total*100)}%</div>
+                        <div class="text-[7px] opacity-60 font-black uppercase tracking-tighter">appear ${res.count70}/${total} times (${total})</div>
+                    </td>
+                    <td class="p-3 text-center ${getC(res.count80, max80, min80)} font-mono">
+                        <div class="text-[13px]">${Math.round(res.count80/total*100)}%</div>
+                        <div class="text-[7px] opacity-60 font-black uppercase tracking-tighter">appear ${res.count80}/${total} times (${total})</div>
+                    </td>
+                </tr>`;
+            });
+            html += `</tbody></table></div></div>`;
+
+            // Prep Outcome Distribution Chart Data
+            const topOutcomesCount = 10;
             const topOutcomes = outcomes.slice(0, topOutcomesCount);
             const othersCount = outcomes.slice(topOutcomesCount).reduce((a,b) => a + b.count, 0);
-            const chartLabels = topOutcomes.map((_, i) => `Outcome #${i+1}`);
+            const chartLabels = topOutcomes.map((_, i) => `Path #${i+1}`);
             const chartValues = topOutcomes.map(o => (o.count / total) * 100);
-            if(othersCount > 0) { chartLabels.push("Miscellaneous rare paths"); chartValues.push((othersCount / total) * 100); }
+            if(othersCount > 0) { chartLabels.push("Other Paths"); chartValues.push((othersCount / total) * 100); }
+            const chartColors = ['#3b82f6', '#2563eb', '#1d4ed8', '#1e40af', '#1e3a8a', '#6366f1', '#4f46e5', '#4338ca', '#3730a3', '#312e81', '#475569'];
 
-            const chartColors = ['#3b82f6', '#2563eb', '#1d4ed8', '#1e40af', '#1e3a8a', '#6366f1', '#4f46e5', '#4338ca', '#3730a3', '#312e81', '#8b5cf6', '#7c3aed', '#6d28d9', '#5b21b6', '#4c1d95', '#475569'];
+            const outcomeMetadata = topOutcomes.map(out => ({
+                points: Object.values(out.stats).reduce((a,b)=>a+b, 0),
+                count: out.count,
+                percentage: ((out.count/total)*100).toFixed(2),
+                stats: out.stats,
+                path: out.path
+            }));
 
-            const outcomeMetadata = topOutcomes.map(out => {
-                const pts = Object.values(out.stats).reduce((a,b)=>a+b, 0);
-                const g = getLiveGradeData(pts, config.rarity, out.stats, 15);
-                const perc = ((out.count/total)*100).toFixed(2);
-                return { points: pts, count: out.count, percentage: perc, grade: g.grade, class: g.class, stats: out.stats, path: out.path };
-            });
-
-            content.innerHTML = `
-                <!-- Benchmark Section -->
-                <section>
-                    ${sectionHeader("The Benchmark")}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-white text-white text-white text-white">
-                        <div class="bg-slate-900/40 p-8 rounded-2xl border border-white/5 shadow-inner text-white text-white text-white">
-                            <div class="flex justify-between items-center mb-8 text-white text-white text-white">
-                                <div><h4 class="text-base font-bold text-white text-white text-white uppercase">Initial stats</h4></div>
-                                <div class="text-right text-white text-white text-white"><span class="text-2xl font-black text-white text-white text-white text-white">${config.stats.reduce((a,b)=>a+b.base,0)}</span><p class="text-[10px] uppercase font-bold opacity-30 text-white text-white">Total</p></div>
-                            </div>
-                            <div class="space-y-6 text-white text-white text-white text-white">${renderStatBlock('base')}</div>
-                        </div>
-                        <div class="bg-slate-900/40 p-8 rounded-2xl border border-blue-500/20 shadow-inner bg-blue-500/5 text-white text-white text-white">
-                            <div class="flex justify-between items-center mb-8 text-white text-white text-white text-white">
-                                <div><h4 class="text-base font-bold text-blue-400 text-white text-white">Mathematical Average</h4><p class="text-[10px] text-slate-500 uppercase font-black opacity-60 text-white text-white text-white">Predicted Mean</p></div>
-                                <div class="text-right text-white text-white text-white text-white"><span class="text-2xl font-black text-blue-400 text-white text-white text-white">${config.stats.reduce((a,b)=>a+Math.round(results[b.id].sumVal/total), 0)}</span><p class="text-[10px] uppercase font-bold opacity-30 text-white text-white text-white">Total</p></div>
-                            </div>
-                            <div class="space-y-6 text-white text-white text-white text-white text-white text-white text-white">${renderStatBlock('avg')}</div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Probability Summaries Section -->
-                <section>
-                    ${sectionHeader("Probability Summaries")}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-white text-white text-white text-white">
-                        <div class="bg-slate-900/40 p-8 rounded-xl border border-slate-700 text-white text-white text-white">
-                            <h4 class="text-center text-[10px] font-black uppercase text-slate-500 mb-8 tracking-[0.2em] text-white text-white text-white text-white">Upgrade Success Summary</h4>
-                            <div class="grid grid-cols-2 gap-6 lg:gap-10 text-white text-white text-white text-white text-white">
-                                ${['STATS OVER 70', 'STATS OVER 80'].map((label, idx) => {
-                                    const data = idx === 0 ? combo70 : combo80;
-                                    let html = `<div class="space-y-4 text-white text-white text-white text-white"><p class="text-[9px] font-black text-slate-500 uppercase border-b border-slate-700/50 pb-1 text-white text-white text-white">${label}</p>`;
-                                    for(let i=config.stats.length; i>=0; i--) {
-                                        const p = Math.round((data[i] || 0) / total * 100);
-                                        const c = p > 50 ? 'text-green-400' : p > 20 ? 'text-yellow-400' : p > 0 ? 'text-gray-300' : 'text-gray-600 opacity-50';
-                                        html += `<div class="flex items-center gap-2 text-white text-white text-white text-white"><span class="font-black text-sm w-8 ${c}">${p}%</span><span class="text-[8px] font-black uppercase text-white/50 tracking-tighter text-white text-white text-white">Chance for ${i} stats over ${idx === 0 ? 70 : 80}</span></div>`;
-                                    }
-                                    return html + `</div>`;
-                                }).join('')}
-                            </div>
-                        </div>
-                        <div class="bg-slate-900/40 p-8 rounded-xl border border-slate-700 text-white text-white text-white">
-                            <h4 class="text-center text-[10px] font-black uppercase text-slate-500 mb-8 tracking-[0.2em] text-white text-white text-white text-white text-white">Individual Probability</h4>
-                            <div class="overflow-hidden rounded border border-slate-700/50 text-white text-white text-white text-white text-white text-white">
-                                <table class="w-full text-left text-white text-white text-white">
-                                    <thead class="bg-slate-900 text-[9px] uppercase text-slate-500 font-black text-white text-white text-white text-white">
-                                        <tr class="text-white text-white text-white text-white"><th class="p-4 border-r border-slate-700/50 text-white text-white text-white">Stat Name</th><th class="p-4 text-center border-r border-slate-700/50 text-white text-white text-white">>70</th><th class="p-4 text-center text-white text-white text-white">>80</th></tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-700/50 bg-slate-800/30 text-white text-white text-white text-white">
-                                        ${config.stats.map(s => {
-                                            const p70 = Math.round(results[s.id].count70 / total * 100);
-                                            const p80 = Math.round(results[s.id].count80 / total * 100);
-                                            const getC = (v) => v >= 60 ? 'text-green-400' : v >= 30 ? 'text-gray-400' : 'text-red-400';
-                                            return `<tr class="text-xs text-white text-white text-white text-white text-white"><td class="p-4 font-bold uppercase text-[10px] text-slate-300 border-r border-slate-700/50 text-white text-white text-white">${s.name}</td><td class="p-4 text-center font-black ${getC(p70)} border-r border-slate-700/50 text-white text-white text-white text-white">${p70}%</td><td class="p-4 text-center font-black ${getC(p80)} text-white text-white text-white text-white">${p80}%</td></tr>`;
-                                        }).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Outcome Distribution Analytics -->
-                <section>
-                    ${sectionHeader("Outcome Distribution Analytics")}
-                    <div class="flex flex-col items-center gap-10 text-white text-white text-white text-white text-white">
-                        <div class="w-full max-w-xl bg-slate-900/40 p-8 rounded-2xl border border-white/5 flex flex-col items-center text-white text-white text-white text-white text-white">
-                            <h4 class="text-sm font-black uppercase text-orange-400 mb-8 tracking-widest text-center text-orange-400 text-orange-400 text-orange-400 text-orange-400">Probability Landscape</h4>
-                            <div class="w-full h-80 relative text-white text-white text-white text-white">
+            // Moved Outcome Distribution Analytics to bottom
+            html += `
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase mb-3 text-center">Probability Landscape</h3>
+                    <div class="flex flex-col gap-8 bg-slate-900/60 p-6 rounded-2xl border border-blue-500/10 shadow-inner">
+                        <div class="w-full flex flex-col items-center">
+                            <div class="w-full max-w-[280px] h-[280px] relative">
                                 <canvas id="outcomeChart"></canvas>
                             </div>
-                            <p class="mt-8 text-[9px] text-slate-500 uppercase font-black tracking-widest text-center leading-relaxed text-white text-white text-white text-white text-white text-white">Hover over slices to see detailed stat DNA</p>
+                            <p class="mt-4 text-[9px] text-slate-500 uppercase font-black tracking-widest text-center leading-relaxed">Hover segments for Stat DNA</p>
                         </div>
                         
-                        <div class="w-full text-white text-white text-white text-white text-white">
-                            <h4 class="text-[10px] font-black uppercase text-slate-500 mb-4 tracking-widest text-white text-white text-white text-white">Most common upgrade paths</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-white text-white text-white text-white">
-                                ${outcomeMetadata.slice(0, 3).map((meta, idx) => {
-                                    return `
-                                        <div class="bg-slate-900/40 p-6 rounded-2xl border text-white text-white text-white text-white text-white text-white text-white" style="border-color: ${chartColors[idx]}55">
-                                            <div class="flex items-center justify-between mb-6 text-white text-white text-white text-white">
-                                                <div class="flex items-center gap-4 text-white text-white">
-                                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center font-black text-black text-[10px]" style="background-color: ${chartColors[idx]}">#${idx+1}</div>
-                                                    <div class="text-white text-white text-white text-white">
-                                                        <p class="text-[10px] font-black uppercase opacity-80 text-white text-white text-white text-white text-white">Appear ${meta.count.toLocaleString()} times (${meta.percentage}%)</p>
-                                                        <p class="text-sm font-black uppercase text-orange-400 text-orange-400 text-orange-400 text-orange-400 text-orange-400 text-orange-400">${meta.points} Total Points</p>
-                                                    </div>
-                                                </div>
-                                                <div class="grade-badge ${meta.class}">${meta.grade}</div>
-                                            </div>
-                                            <div class="space-y-4 text-white text-white text-white text-white text-white text-white text-white text-white">${renderStatBlock('outcome', meta.stats, meta.path)}</div>
-                                        </div>`;
-                                }).join('')}
-
-                                ${othersCount > 0 ? `
-                                    <div class="bg-slate-900/40 p-6 rounded-2xl border border-white/5 opacity-60 flex flex-col justify-center text-center h-full text-white text-white text-white text-white text-white">
-                                        <div class="w-10 h-10 bg-slate-700 rounded-xl flex items-center justify-center font-black text-[12px] text-white mx-auto mb-4 text-white text-white text-white text-white text-white">...</div>
-                                        <p class="text-[14px] font-black uppercase tracking-wider text-white text-white text-white text-white text-white text-white text-white text-white text-white">${((othersCount/total)*100).toFixed(2)}% Combined</p>
-                                        <p class="text-[10px] text-slate-400 font-bold uppercase mt-2 text-white text-white text-white text-white text-white text-white">Miscellaneous rare upgrade paths</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            ${outcomeMetadata.slice(0, 3).map((meta, idx) => `
+                                <div class="bg-slate-800/40 p-5 rounded-lg border border-white/5 flex flex-col" style="border-top: 3px solid ${chartColors[idx]}">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="w-7 h-7 rounded bg-slate-700 flex items-center justify-center font-black text-[11px] text-blue-400 shrink-0">#${idx+1}</div>
+                                        <div class="text-right">
+                                            <p class="text-[11px] font-black uppercase opacity-90 leading-none">Appear ${meta.count.toLocaleString()} times (${meta.percentage}%)</p>
+                                            <p class="text-[8px] font-black uppercase text-orange-400/80 leading-none mt-1.5">${meta.points} Pts Total</p>
+                                        </div>
                                     </div>
-                                ` : ''}
-                            </div>
-                            <div class="mt-8 text-white text-white text-white text-white"><button onclick="toggleOutcomeDetails()" id="btn-toggle-outcomes" class="w-full py-4 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 rounded-xl text-orange-400 text-[10px] font-black uppercase tracking-[0.2em] transition-all text-white text-white text-white text-white text-white text-white">View all unique distributions</button></div>
+                                    <div class="space-y-2 flex-grow">
+                                        ${renderSmallStatBlock(meta.stats, meta.path)}
+                                    </div>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
+                </div>
+            `;
 
-                    <div id="outcomes-detailed-list" class="hidden mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12 text-white text-white text-white text-white text-white text-white">
-                        ${outcomes.slice(0, 30).map((out, idx) => {
-                            const pts = Object.values(out.stats).reduce((a,b)=>a+b, 0);
-                            const g = getLiveGradeData(pts, config.rarity, out.stats, 15);
-                            return `<div class="bg-slate-900/60 p-6 rounded-2xl border border-white/5 text-white text-white text-white text-white text-white text-white"><div class="flex justify-between items-center mb-6 text-white text-white text-white text-white text-white text-white text-white text-white"><div class="text-[10px] font-black text-slate-500 uppercase tracking-widest text-white text-white text-white text-white text-white text-white text-white text-white text-white text-white">Outcome #${idx+1} [${((out.count/total)*100).toFixed(2)}%]</div><div class="grade-badge grade-badge-sm ${g.class}">${g.grade}</div></div><div class="space-y-3 text-white text-white text-white text-white text-white text-white text-white text-white text-white text-white text-white text-white">${renderStatBlock('outcome', out.stats, out.path)}</div></div>`;
-                        }).join('')}
-                    </div>
-                </section>`;
+            html += `
+                <div class="mt-8 p-4 bg-slate-900/80 rounded-xl border border-red-500/30 shadow-lg">
+                    <p class="text-[10px] text-gray-400 leading-relaxed italic text-center">
+                        <span class="text-red-400 font-bold uppercase not-italic block mb-1">Disclaimer</span>
+                        This report is a prediction based on the user's racket input and automatic simulation iteration results. These results are not 100% accurate and may not occur exactly the same in-game due to varying game RNG factors.
+                    </p>
+                </div>
+            `;
+            content.innerHTML = html;
 
+            // Initialize Distribution Chart
             setTimeout(() => {
                 const ctx = document.getElementById('outcomeChart').getContext('2d');
                 if(chartInstance) chartInstance.destroy();
@@ -770,7 +754,7 @@
                         datasets: [{ data: chartValues, backgroundColor: chartColors.slice(0, chartLabels.length), borderWidth: 0, hoverOffset: 15 }]
                     },
                     options: {
-                        responsive: true, maintainAspectRatio: false, cutout: '70%',
+                        responsive: true, maintainAspectRatio: false, cutout: '75%',
                         plugins: {
                             legend: { display: false },
                             tooltip: {
@@ -782,13 +766,13 @@
                                     const idx = tooltip.dataPoints[0].dataIndex;
                                     const meta = outcomeMetadata[idx];
                                     if (!meta) {
-                                        document.getElementById('dna-header').innerHTML = `<div class="w-full text-center text-white text-white text-white text-white text-white"><p class="text-[10px] font-bold text-slate-400 italic text-white text-white text-white">Miscellaneous rare upgrade paths</p><p class="text-[9px] font-black text-slate-500 mt-1 text-white text-white text-white text-white text-white">${((othersCount/total)*100).toFixed(2)}% of total runs</p></div>`;
+                                        document.getElementById('dna-header').innerHTML = `<div class="w-full text-center text-xs font-bold text-slate-400 italic">Other Paths Combined</div>`;
                                         document.getElementById('dna-bars').innerHTML = '';
                                     } else {
-                                        document.getElementById('dna-header').innerHTML = `<div class="grade-badge grade-badge-sm ${meta.class}">${meta.grade}</div><div class="text-right text-white text-white text-white text-white text-white text-white"><p class="text-xs font-black text-orange-400 text-orange-400 text-orange-400 text-orange-400 text-white">${meta.points} Pts</p><p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter text-white text-white text-white text-white text-white text-white text-white text-white text-white">Appear ${meta.count.toLocaleString()} times (${meta.percentage}%)</p></div>`;
+                                        document.getElementById('dna-header').innerHTML = `<div class="text-blue-400 font-black text-xs">PATH #${idx+1}</div><div class="text-right leading-none"><p class="text-xs font-black text-orange-400">${meta.points} Pts</p><p class="text-[9px] font-bold text-slate-400 uppercase">Appear ${meta.count.toLocaleString()} times (${meta.percentage}%)</p></div>`;
                                         document.getElementById('dna-bars').innerHTML = config.stats.map(s => {
                                             const val = meta.stats[s.id], rolls = meta.path[s.id], p = Math.min(val, 100), c = val >= 90 ? 'stat-extreme' : val >= 80 ? 'stat-high' : val >= 70 ? 'stat-medium' : 'stat-low';
-                                            return `<div class="space-y-1 text-white text-white text-white text-white text-white text-white text-white text-white"><div class="flex justify-between text-[8px] font-black uppercase text-white text-white text-white text-white"><span class="${s.isIdentity ? 'text-blue-400' : 'text-slate-400'} text-white text-white text-white">${s.name} [${rolls}r]</span><span class="text-white text-white text-white text-white text-white text-white text-white">${val}</span></div><div class="stat-bar-bg h-1.5 border-0 text-white text-white text-white text-white text-white text-white text-white text-white text-white text-white text-white text-white text-white"><div class="stat-bar-fill ${c}" style="width: ${p}%"></div></div></div>`;
+                                            return `<div class="space-y-1"><div class="flex justify-between text-[8px] font-black uppercase leading-none"><span class="${s.isIdentity ? 'text-blue-400' : 'text-slate-400'}">${s.name} [${rolls}]</span><span>${val}</span></div><div class="stat-bar-bg h-1 border-0 rounded-sm"><div class="stat-bar-fill ${c}" style="width: ${p}%"></div></div></div>`;
                                         }).join('');
                                     }
                                     const rect = chart.canvas.getBoundingClientRect();
@@ -803,13 +787,15 @@
             }, 50);
         }
 
-        function toggleOutcomeDetails() {
-            const list = document.getElementById('outcomes-detailed-list');
-            list.classList.toggle('hidden');
-        }
-
         function closeAnalysis() { document.getElementById('analysis-modal').classList.add('hidden'); }
-        window.onload = initEditor;
+        function addHistory(lvl, name, pts, newVal) {
+            const h = document.getElementById('history'); if (lvl === (config.startLevel + 1)) h.innerHTML = '';
+            const e = document.createElement('div'); e.className = "mb-1 border-b border-white/5 pb-1 flex justify-between items-center";
+            let b = newVal >= 90 ? '<span class=\"text-[8px] bg-magenta-600 px-1 rounded ml-1 text-white font-bold uppercase tracking-tighter\">Legendary Roll</span>' : newVal >= 80 ? '<span class=\"text-[8px] bg-red-600 px-1 rounded ml-1 text-white font-bold uppercase tracking-tighter\">Hard Roll</span>' : '';
+            e.innerHTML = `<span><span class="text-orange-400">LVL ${lvl}</span>: <span class="text-gray-200">${name}</span> ${b}</span><span class="text-green-400 font-bold">+${pts}</span>`;
+            h.prepend(e);
+        }
+        window.onload = function() { initEditor(); };
     </script>
 </body>
 </html>
